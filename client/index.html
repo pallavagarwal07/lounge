@@ -325,7 +325,7 @@
 								</label>
 							</div>
 
-							<% if (!public  && !ldap.enable) { %>
+							<% if (!public  && !ldap.enable && !customAuth.enable) { %>
 							<div id="change-password">
 								<form action="" method="post">
 									<div class="col-sm-12">

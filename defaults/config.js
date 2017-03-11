@@ -361,6 +361,32 @@ module.exports = {
 		primaryKey: "uid"
 	},
 
+	// Custom Authentication settings (only available if public=false)
+	// @type    object
+	// @default {}
+	//
+	customAuth: {
+		//
+		// Enable custom user authentication
+		//
+		// @type     boolean
+		// @default  false
+		//
+		enable: false,
+
+		//
+		// User auth function file
+		// User can define a custom authentication function in this file
+		// Export the function of the type auth(username, password, callback)
+		// in that file, where the callback function takes error as argument
+		// if one occurs, and null othewise.
+		//
+		// @type     string
+		//
+		url: "~/.lounge/customAuth.js"
+	},
+
+
 	// Extra debugging
 	//
 	// @type     object

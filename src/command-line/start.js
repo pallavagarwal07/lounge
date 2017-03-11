@@ -24,7 +24,7 @@ program
 			mode = false;
 		}
 
-		if (!mode && !users.length && !Helper.config.ldap.enable) {
+		if (!mode && !users.length && !Helper.config.ldap.enable && !Helper.config.customAuth.enable) {
 			log.warn("No users found.");
 			log.info(`Create a new user with ${colors.bold("lounge add <name>")}.`);
 

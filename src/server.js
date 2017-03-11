@@ -6,6 +6,7 @@ var Client = require("./client");
 var ClientManager = require("./clientManager");
 var express = require("express");
 var fs = require("fs");
+var path = require("path");
 var io = require("socket.io");
 var dns = require("dns");
 var Helper = require("./helper");
@@ -33,6 +34,12 @@ module.exports = function() {
 
 	if (config.public && (config.ldap || {}).enable) {
 		log.warn("Server is public and set to use LDAP. Set to private mode if trying to use LDAP authentication.");
+	}
+	if (config.public && (config.customAuth || {}).enable) {
+		log.warn("Server is public and set to use CustomAuth. Set to private mode if trying to use custom authentication.");
+	}
+	if ((config.ldap || {}).enable && (config.customAuth || {}).enable) {
+		log.warn("Server is set to use both LDAP and CustomAuth. Disable LDAP to use CustomAuth.");
 	}
 
 	if (!config.https.enable) {
@@ -66,6 +73,8 @@ module.exports = function() {
 
 	if (!config.public && (config.ldap || {}).enable) {
 		authFunction = ldapAuth;
+	} else if (!config.public && (config.customAuth || {}).enable) {
+		authFunction = customAuth;
 	}
 
 	var sockets = io(server, {
@@ -313,6 +322,33 @@ function ldapAuth(client, user, password, callback) {
 		ldapclient.unbind();
 		callback(!err);
 	});
+}
+
+function customAuth(client, user, password, callback) {
+	var resolveDir = function(filepath) {
+		if (filepath[0] === "~") {
+			return path.join(process.env.HOME, filepath.slice(1));
+		}
+		return filepath;
+	};
+
+	Helper.config.customAuth.path = resolveDir(Helper.config.customAuth.path);
+
+	if (!fs.existsSync(Helper.config.customAuth.path)) {
+		var error = "The custom auth file, " + Helper.config.customAuth.path + ", does not exist";
+		log.error(error);
+		callback(false);
+	} else {
+		var customAuthFunc = require(Helper.config.customAuth.path);
+		customAuthFunc(user, password, function(err) {
+			if (!err && !client) {
+				if (!manager.addUser(user, null)) {
+					log.error("Unable to create new user", user);
+				}
+			}
+			callback(!err);
+		});
+	}
 }
 
 function auth(data) {
